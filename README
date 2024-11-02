@@ -1,0 +1,54 @@
+# Simulador de Linguagem Regular
+
+Este projeto é um simulador de linguagem regular que utiliza uma interface gráfica para definir gramáticas e analisar strings.
+
+## Requisitos
+
+- Python 3.x
+- Tkinter (geralmente incluído na instalação padrão do Python)
+
+## Como Iniciar o Projeto
+
+1. Instale o Python 3:
+    ```sh
+    sudo apt-get install python3
+    ```
+2. Instale o Tkinter:
+    ```sh
+    sudo apt-get install python3-tk
+    ```
+3. Clone o repositório para o seu ambiente local:
+    ```sh
+    git clone https://github.com/seu-usuario/seu-repositorio.git
+    ```
+4. Navegue até o diretório do projeto:
+    ```sh
+    cd seu-repositorio
+    ```
+5. Execute o script `simulador.py`:
+    ```sh
+    python3 simulador.py
+    ```
+
+## Como Fechar o Projeto
+
+Para fechar o simulador, basta fechar a janela da interface gráfica.
+
+## Funcionalidades
+
+- Definir produções da gramática no formato `S->aA;A->bB;B->c`.
+- Analisar uma string para verificar se ela é válida para a linguagem definida.
+
+## Estrutura do Projeto
+
+- `simulador.py`: Contém a implementação do simulador de linguagem regular.
+
+## Exemplo de Uso
+
+1. Defina as produções da gramática no campo de entrada.
+2. Insira a string a ser analisada.
+3. Clique no botão "Analisar String" para verificar se a string é válida para a linguagem.
+
+## Licença
+
+Este projeto está licenciado sob a [MIT License](LICENSE).
