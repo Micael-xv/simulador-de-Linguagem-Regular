@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import tkinter as tk
-from tkinter import messagebox
 
 class RegularLanguageSimulator:
     def __init__(self, master):
@@ -28,6 +27,9 @@ class RegularLanguageSimulator:
         rules = {}
         productions = grammar_text.split(";")
         for production in productions:
+            production = production.strip()  # Remove espaços em branco
+            if "->" not in production:
+                continue  # Ignora produções que não estão no formato esperado
             left, right = production.split("->")
             if left not in rules:
                 rules[left] = []
@@ -36,23 +38,27 @@ class RegularLanguageSimulator:
     
     def generate_automaton(self, rules):
         automaton = {}
+        final_states = set()  # Usar um conjunto para rastrear estados finais
         for state, transitions in rules.items():
             for transition in transitions:
                 symbol = transition[0]  # Primeiro caractere é o símbolo
-                next_state = transition[1:] if len(transition) > 1 else "F"  # Estado final se não houver próximo
+                next_state = transition[1:] if len(transition) > 1 else None  # Se não houver próximo, é um estado final
                 if state not in automaton:
                     automaton[state] = {}
                 automaton[state][symbol] = next_state
-        return automaton
-
-    def simulate_automaton(self, automaton, input_string):
+                if next_state is None:  # Se não houver próximo, é um estado final
+                    final_states.add(state)  # O estado atual é final
+        return automaton, final_states
+    
+    def simulate_automaton(self, automaton, input_string, final_states):
         current_state = "S"
         for symbol in input_string:
             if symbol in automaton.get(current_state, {}):
                 current_state = automaton[current_state][symbol]
             else:
                 return False
-        return current_state == "F"
+        # Verifica se o estado atual após processar toda a string é um dos estados finais
+        return current_state in final_states
 
     def analyze_string(self):
         grammar_text = self.grammar_input.get()
@@ -60,10 +66,10 @@ class RegularLanguageSimulator:
         
         # Parse e criar autômato
         rules = self.parse_grammar(grammar_text)
-        automaton = self.generate_automaton(rules)
+        automaton, final_states = self.generate_automaton(rules)
         
         # Simular autômato com a string
-        is_valid = self.simulate_automaton(automaton, input_string)
+        is_valid = self.simulate_automaton(automaton, input_string, final_states)
         
         # Resultado
         if is_valid:
