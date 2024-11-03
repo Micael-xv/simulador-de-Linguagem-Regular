@@ -5,7 +5,7 @@ class RegularLanguageSimulator:
     def __init__(self, master):
         self.master = master
         self.master.title("Simulador de Linguagem Regular")
-        
+    
         # Definição da Gramática
         tk.Label(master, text="Defina as Produções da Gramática (ex: S->aA;A->bB;B->c)").pack()
         self.grammar_input = tk.Entry(master, width=50)
@@ -58,7 +58,7 @@ class RegularLanguageSimulator:
             else:
                 return False
         # Verifica se o estado atual após processar toda a string é um dos estados finais
-        return current_state in final_states
+        return current_state in final_states or current_state is None
 
     def analyze_string(self):
         grammar_text = self.grammar_input.get()
