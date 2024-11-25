@@ -63,46 +63,38 @@ class SimuladorGramatica:
         self.janela.geometry("800x500")
         self.janela.configure(bg="#f5f5f5")
 
-        # Fonte personalizada
         fonte_titulo = font.Font(family="Helvetica", size=16, weight="bold")
         fonte_label = font.Font(family="Helvetica", size=12)
 
-        # Título
         titulo = tk.Label(
             self.janela, text="Simulador de Gramática e Autômato", font=fonte_titulo, bg="#f5f5f5", fg="#333"
         )
         titulo.pack(pady=10)
 
-        # Frame principal
         self.framePrincipal = tk.Frame(self.janela, bg="#f5f5f5")
         self.framePrincipal.pack(pady=10, padx=10, fill="both", expand=True)
 
-        # Entrada de gramática
         tk.Label(
             self.framePrincipal, text="Gramática Regular:", font=fonte_label, bg="#f5f5f5"
         ).grid(row=0, column=0, padx=10, sticky="w")
         self.entradaGramatica = scrolledtext.ScrolledText(self.framePrincipal, width=40, height=10)
         self.entradaGramatica.grid(row=1, column=0, padx=10, pady=5)
 
-        # Símbolo inicial
         tk.Label(
             self.framePrincipal, text="Símbolo Inicial:", font=fonte_label, bg="#f5f5f5"
         ).grid(row=0, column=1, padx=10, sticky="w")
         self.simboloInicial = tk.Entry(self.framePrincipal, width=15)
         self.simboloInicial.grid(row=1, column=1, padx=10, pady=5)
 
-        # Cadeias de teste
         tk.Label(
             self.framePrincipal, text="Cadeias (separadas por vírgula):", font=fonte_label, bg="#f5f5f5"
         ).grid(row=2, column=0, padx=10, sticky="w")
         self.cadeiasTeste = tk.Entry(self.framePrincipal, width=60)
         self.cadeiasTeste.grid(row=3, column=0, columnspan=2, padx=10, pady=5)
 
-        # Botão de execução
         self.botaoTestar = tk.Button(self.janela, text="Testar", command=self.executar_simulacao, bg="#4CAF50", fg="white", padx=10, pady=5)
         self.botaoTestar.pack(pady=10)
 
-        # Resultado
         tk.Label(
             self.framePrincipal, text="Resultados:", font=fonte_label, bg="#f5f5f5"
         ).grid(row=4, column=0, columnspan=2, pady=5)
@@ -137,7 +129,6 @@ class SimuladorGramatica:
         self.resultadoSaida.delete("1.0", tk.END)
         self.resultadoSaida.insert(tk.END, "\n".join(resultados))
         self.resultadoSaida.config(state="disabled")
-
 
 if __name__ == "__main__":
     janela = tk.Tk()
