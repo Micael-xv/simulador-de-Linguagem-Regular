@@ -56,26 +56,27 @@ class RegularLanguageSimulator:
         return automaton
 
     def simulate_automaton(self, automaton, input_string, final_states):
-        def dfs(state, index):
-            # Se processamos toda a string, verifica se estamos em um estado final
+        # Uso de uma pilha para explorar todas as transições possíveis
+        stack = [("S", 0)]  # Começa no estado inicial "S" e no índice 0 da string
+        while stack:
+            state, index = stack.pop()
+
+            # Caso base: se toda a string foi processada, verifica se o estado é final
             if index == len(input_string):
-                return state in final_states
-            
+                if state in final_states:
+                    return True
+                continue
+
             # Obter o símbolo atual da string
             symbol = input_string[index]
-            
-            # Verifica se há transições válidas para o estado atual
-            if state not in automaton or symbol not in automaton[state]:
-                return False
-            
-            # Explora todas as transições possíveis para o símbolo atual
-            for next_state in automaton[state][symbol]:
-                if next_state is not None and dfs(next_state, index + 1):
-                    return True
-            
-            return False
 
-        return dfs("S", 0)
+            # Verificar transições válidas para o estado atual
+            if state in automaton and symbol in automaton[state]:
+                for next_state in automaton[state][symbol]:
+                    # Adiciona o próximo estado e o próximo índice para explorar
+                    stack.append((next_state, index + 1))
+
+        return False
 
     def analyze_string(self):
         grammar_text = self.grammar_input.get()
