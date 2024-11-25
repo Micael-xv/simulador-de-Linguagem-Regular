@@ -1,107 +1,145 @@
-# -*- coding: utf-8 -*-
 import tkinter as tk
-from tkinter import messagebox
+from tkinter import messagebox, scrolledtext, font
 
-class RegularLanguageSimulator:
-    def __init__(self, master):
-        self.master = master
-        self.master.title("Simulador de Linguagem Regular")
 
-        # Definição da Gramática
-        tk.Label(master, text="Defina as Produções da Gramática (ex: S->aA;A->bB;B->c)").pack()
-        self.grammar_input = tk.Entry(master, width=50)
-        self.grammar_input.pack()
+class Automato:
+    def __init__(self):
+        self.estados = set()
+        self.alfabeto = set()
+        self.transicoes = {}
+        self.estadoInicial = None
+        self.estadosDeAceitacao = set()
 
-        # Entrada dos Estados Finais
-        tk.Label(master, text="Defina os Estados Finais (ex: A,B):").pack()
-        self.final_states_input = tk.Entry(master, width=50)
-        self.final_states_input.pack()
+    def adicionar_estado(self, estado, inicial=False, aceitacao=False):
+        self.estados.add(estado)
+        if inicial:
+            self.estadoInicial = estado
+        if aceitacao:
+            self.estadosDeAceitacao.add(estado)
 
-        # Entrada da String
-        tk.Label(master, text="String a ser analisada:").pack()
-        self.string_input = tk.Entry(master, width=50)
-        self.string_input.pack()
+    def adicionar_transicao(self, origem, simbolo, destino):
+        if origem not in self.transicoes:
+            self.transicoes[origem] = {}
+        if simbolo not in self.transicoes[origem]:
+            self.transicoes[origem][simbolo] = set()
+        self.transicoes[origem][simbolo].add(destino)
 
-        # Botão de Análise
-        tk.Button(master, text="Analisar String", command=self.analyze_string).pack()
+    def validar_cadeia(self, cadeia):
+        estados_atuais = {self.estadoInicial}
+        for simbolo in cadeia:
+            proximos_estados = set()
+            for estado in estados_atuais:
+                if estado in self.transicoes and simbolo in self.transicoes[estado]:
+                    proximos_estados.update(self.transicoes[estado][simbolo])
+            estados_atuais = proximos_estados
+        return bool(estados_atuais & self.estadosDeAceitacao)
+
+
+def converter_gramatica_para_automato(regras, simbolo_inicial):
+    automato = Automato()
+    for regra in regras:
+        esquerda, direita = regra.split("->")
+        esquerda = esquerda.strip()
+        automato.adicionar_estado(esquerda, inicial=(esquerda == simbolo_inicial))
+        producoes = direita.split("|")
+        for producao in producoes:
+            producao = producao.strip()
+            if producao == "ε":
+                automato.adicionar_estado(esquerda, aceitacao=True)
+            elif len(producao) == 1:  # Apenas terminal
+                automato.adicionar_estado("final", aceitacao=True)
+                automato.adicionar_transicao(esquerda, producao, "final")
+            else:
+                terminal, nao_terminal = producao[0], producao[1:]
+                automato.adicionar_estado(nao_terminal)
+                automato.adicionar_transicao(esquerda, terminal, nao_terminal)
+    return automato
+
+
+class SimuladorGramatica:
+    def __init__(self, janela):
+        self.janela = janela
+        self.janela.title("Simulador de Gramática e Autômato")
+        self.janela.geometry("800x500")
+        self.janela.configure(bg="#f5f5f5")
+
+        # Fonte personalizada
+        fonte_titulo = font.Font(family="Helvetica", size=16, weight="bold")
+        fonte_label = font.Font(family="Helvetica", size=12)
+
+        # Título
+        titulo = tk.Label(
+            self.janela, text="Simulador de Gramática e Autômato", font=fonte_titulo, bg="#f5f5f5", fg="#333"
+        )
+        titulo.pack(pady=10)
+
+        # Frame principal
+        self.framePrincipal = tk.Frame(self.janela, bg="#f5f5f5")
+        self.framePrincipal.pack(pady=10, padx=10, fill="both", expand=True)
+
+        # Entrada de gramática
+        tk.Label(
+            self.framePrincipal, text="Gramática Regular:", font=fonte_label, bg="#f5f5f5"
+        ).grid(row=0, column=0, padx=10, sticky="w")
+        self.entradaGramatica = scrolledtext.ScrolledText(self.framePrincipal, width=40, height=10)
+        self.entradaGramatica.grid(row=1, column=0, padx=10, pady=5)
+
+        # Símbolo inicial
+        tk.Label(
+            self.framePrincipal, text="Símbolo Inicial:", font=fonte_label, bg="#f5f5f5"
+        ).grid(row=0, column=1, padx=10, sticky="w")
+        self.simboloInicial = tk.Entry(self.framePrincipal, width=15)
+        self.simboloInicial.grid(row=1, column=1, padx=10, pady=5)
+
+        # Cadeias de teste
+        tk.Label(
+            self.framePrincipal, text="Cadeias (separadas por vírgula):", font=fonte_label, bg="#f5f5f5"
+        ).grid(row=2, column=0, padx=10, sticky="w")
+        self.cadeiasTeste = tk.Entry(self.framePrincipal, width=60)
+        self.cadeiasTeste.grid(row=3, column=0, columnspan=2, padx=10, pady=5)
+
+        # Botão de execução
+        self.botaoTestar = tk.Button(self.janela, text="Testar", command=self.executar_simulacao, bg="#4CAF50", fg="white", padx=10, pady=5)
+        self.botaoTestar.pack(pady=10)
 
         # Resultado
-        self.result_label = tk.Label(master, text="")
-        self.result_label.pack()
+        tk.Label(
+            self.framePrincipal, text="Resultados:", font=fonte_label, bg="#f5f5f5"
+        ).grid(row=4, column=0, columnspan=2, pady=5)
+        self.resultadoSaida = scrolledtext.ScrolledText(self.framePrincipal, width=70, height=10, state="disabled")
+        self.resultadoSaida.grid(row=5, column=0, columnspan=2, padx=10, pady=5)
 
-    def parse_grammar(self, grammar_text):
-        rules = {}
-        productions = grammar_text.split(";")
-        for production in productions:
-            production = production.strip()  # Remove espaços em branco
-            if "->" not in production:
-                continue  # Ignora produções que não estão no formato esperado
-            left, right = production.split("->")
-            if left not in rules:
-                rules[left] = []
-            rules[left].append(right)
-        return rules
+    def executar_simulacao(self):
+        texto_gramatica = self.entradaGramatica.get("1.0", tk.END).strip()
+        simbolo_inicial = self.simboloInicial.get().strip()
+        cadeias_teste = self.cadeiasTeste.get().strip().split(",")
 
-    def generate_automaton(self, rules):
-        automaton = {}
-        for state, transitions in rules.items():
-            for transition in transitions:
-                symbol = transition[0]  # Primeiro caractere é o símbolo
-                next_state = transition[1:] if len(transition) > 1 else None
-                if state not in automaton:
-                    automaton[state] = {}
-                if symbol not in automaton[state]:
-                    automaton[state][symbol] = []
-                automaton[state][symbol].append(next_state)
-        return automaton
-
-    def simulate_automaton(self, automaton, input_string, final_states):
-        # Uso de uma pilha para explorar todas as transições possíveis
-        stack = [("S", 0)]  # Começa no estado inicial "S" e no índice 0 da string
-        while stack:
-            state, index = stack.pop()
-
-            # Caso base: se toda a string foi processada, verifica se o estado é final
-            if index == len(input_string):
-                if state in final_states:
-                    return True
-                continue
-
-            # Obter o símbolo atual da string
-            symbol = input_string[index]
-
-            # Verificar transições válidas para o estado atual
-            if state in automaton and symbol in automaton[state]:
-                for next_state in automaton[state][symbol]:
-                    # Adiciona o próximo estado e o próximo índice para explorar
-                    stack.append((next_state, index + 1))
-
-        return False
-
-    def analyze_string(self):
-        grammar_text = self.grammar_input.get()
-        input_string = self.string_input.get()
-        final_states_text = self.final_states_input.get()
-
-        if not grammar_text or not input_string or not final_states_text:
-            messagebox.showerror("Erro", "Por favor, preencha todos os campos.")
+        if not texto_gramatica or not simbolo_inicial or not cadeias_teste:
+            messagebox.showerror("Erro", "Preencha todos os campos.")
             return
 
-        # Parse e criar autômato
-        rules = self.parse_grammar(grammar_text)
-        final_states = set(final_states_text.split(","))
-        automaton = self.generate_automaton(rules)
+        regras = texto_gramatica.splitlines()
+        try:
+            automato = converter_gramatica_para_automato(regras, simbolo_inicial)
+        except Exception as e:
+            messagebox.showerror("Erro", f"Erro ao processar a gramática: {e}")
+            return
 
-        # Simular autômato com a string
-        is_valid = self.simulate_automaton(automaton, input_string, final_states)
+        resultados = []
+        for cadeia in cadeias_teste:
+            cadeia = cadeia.strip()
+            if automato.validar_cadeia(cadeia):
+                resultados.append(f"'{cadeia}' -> Aceita")
+            else:
+                resultados.append(f"'{cadeia}' -> Rejeitada")
 
-        # Resultado
-        if is_valid:
-            self.result_label.config(text="A string é válida para a linguagem.", fg="green")
-        else:
-            self.result_label.config(text="A string NÃO é válida para a linguagem.", fg="red")
+        self.resultadoSaida.config(state="normal")
+        self.resultadoSaida.delete("1.0", tk.END)
+        self.resultadoSaida.insert(tk.END, "\n".join(resultados))
+        self.resultadoSaida.config(state="disabled")
+
 
 if __name__ == "__main__":
-    root = tk.Tk()
-    simulator = RegularLanguageSimulator(root)
-    root.mainloop()
+    janela = tk.Tk()
+    app = SimuladorGramatica(janela)
+    janela.mainloop()
