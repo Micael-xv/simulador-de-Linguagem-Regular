@@ -53,7 +53,6 @@ def converter_gramatica_para_automato(regras, simbolo_inicial):
                 automato.adicionar_transicao(esquerda, terminal, nao_terminal)
     return automato
 
-
 class SimuladorGramatica:
     def __init__(self, janela):
         self.janela = janela
