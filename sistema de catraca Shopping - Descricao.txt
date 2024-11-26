@@ -1,7 +1,8 @@
 IMPLEMENTAÇÃO DE UM SISTEMA DE CATRACA DE UM ESTACIONAMENTO DE SHOPPING
 
 
-Essa implementação pode ser vista como uma simulação de um autômato finito determinístico (DFA).Este código cria uma interface simples que simula o funcionamento de uma catraca. A catraca pode estar nos estados "Aberta" ou "Fechada". O estado atual da catraca é exibido na interface, que pode ser atualizada através dos botões "Inserir" e "Passar". 
+Essa implementação pode ser vista como uma simulação de um autômato finito determinístico (DFA).Este código cria uma interface simples que simula o funcionamento de uma catraca.
+A catraca pode estar nos estados "Aberta" ou "Fechada". O estado da catraca é exibido na interface, que pode ser atualizada através dos botões "Inserir" e "Passar". 
 
 No caso da catraca, temos definidos:
 - Estados do Autômato:
@@ -17,7 +18,7 @@ No caso da catraca, temos definidos:
 A catraca tem um estado inicial (Fechado), e a cada interação do usuário (como inserir cartão, efetuar pagamento e passar pela catraca), a catraca transita entre os estados de conforme as ações são realizadas.
 
 - Características de um Autômato Finito:
-- Finitude: O número de estados é finito. No caso, temos três estados (Fechado, Paga, Aberto).
+- O número de estados é finito. No caso, temos três estados (Fechado, Paga, Aberto).
 - Determinismo: Para cada estado, há uma ação bem definida (entrada de cartão, pagamento, passagem) que determina a transição para o próximo estado.
 
 
@@ -75,7 +76,7 @@ fonte_titulo = font.Font(family="Helvetica", size=16, weight="bold")
         self.botaoPassar = tk.Button(self.framePrincipal, text="Passar", command=self.passar, bg="#4CAF50", fg="white", padx=10, pady=5)
         self.botaoPassar.grid(row=1, column=1, pady=10)
 
-Cria um botão "Passar" e define a ação self.passar para ser executada quando o botão for clicado.
+-Cria um botão "Passar" e define a ação self.passar para ser executada quando o botão for clicado.
 
     def inserir(self):
         self.catraca.transicao('inserir')
