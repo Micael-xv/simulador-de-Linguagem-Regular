@@ -1,0 +1,96 @@
+IMPLEMENTAÇÃO DE UM SISTEMA DE CATRACA DE UM ESTACIONAMENTO DE SHOPPING
+
+
+Essa implementação pode ser vista como uma simulação de um autômato finito determinístico (DFA).Este código cria uma interface simples que simula o funcionamento de uma catraca. A catraca pode estar nos estados "Aberta" ou "Fechada". O estado atual da catraca é exibido na interface, que pode ser atualizada através dos botões "Inserir" e "Passar". 
+
+No caso da catraca, temos definidos:
+- Estados do Autômato:
+- Fechado: A catraca está fechada, aguardando a inserção do cartão.
+- Paga: A catraca está aguardando o pagamento após o cartão ser inserido.
+- Aberto: A catraca está aberta, permitindo que o usuário passe por ela.
+
+- Transições do Autômato:
+- Fechado → Paga: Quando o cartão é inserido (ação de entrada do cartão).
+- Paga → Aberto: Quando o pagamento é efetuado (ação de pagamento).
+- Aberto → Fechado: Quando o usuário passa pela catraca (ação de passagem).
+
+A catraca tem um estado inicial (Fechado), e a cada interação do usuário (como inserir cartão, efetuar pagamento e passar pela catraca), a catraca transita entre os estados de conforme as ações são realizadas.
+
+- Características de um Autômato Finito:
+- Finitude: O número de estados é finito. No caso, temos três estados (Fechado, Paga, Aberto).
+- Determinismo: Para cada estado, há uma ação bem definida (entrada de cartão, pagamento, passagem) que determina a transição para o próximo estado.
+
+
+
+Descrição do código:
+
+import tkinter as tk
+from tkinter import messagebox, scrolledtext, font
+
+-Essas linhas importam o módulo tkinter e alguns de seus componentes. tkinter é uma biblioteca padrão do Python usada para criar interfaces gráficas.
+
+class Catraca:
+    def __init__(self):
+        self.estadoAtual = 'Fechada'
+
+-Temos a classe da catraca e o método __init__ inicializando a mesma no estado 'Fechada'.
+
+    def transicao(self, evento):
+        if self.estadoAtual == 'Fechada' and evento == 'inserir':
+            self.estadoAtual = 'Aberta'
+        elif self.estadoAtual == 'Aberta' and evento == 'passar':
+            self.estadoAtual = 'Fechada'
+
+-O método transicao define as transições entre os estados da catraca
+
+class SimuladorCatraca:
+    def __init__(self, janela):
+        self.janela = janela
+        self.janela.title("Simulador de Catraca")
+        self.janela.geometry("300x200")
+        self.janela.configure(bg="#f5f5f5")
+
+        self.catraca = Catraca()
+
+A classe SimuladorCatraca cria aa interface do simulador.
+
+fonte_titulo = font.Font(family="Helvetica", size=16, weight="bold")
+        fonte_label = font.Font(family="Helvetica", size=12)
+
+ titulo = tk.Label(self.janela, text="Simulador de Catraca", font=fonte_titulo, bg="#f5f5f5", fg="#333")
+        titulo.pack(pady=10)
+
+        self.framePrincipal = tk.Frame(self.janela, bg="#f5f5f5")
+        self.framePrincipal.pack(pady=10, padx=10, fill="both", expand=True)
+
+        tk.Label(self.framePrincipal, text="Estado Atual:", font=fonte_label, bg="#f5f5f5").grid(row=0, column=0, padx=10, sticky="w")
+        self.estadoAtual = tk.Label(self.framePrincipal, text=self.catraca.estadoAtual, font=fonte_label, bg="#f5f5f5")
+        self.estadoAtual.grid(row=0, column=1, padx=10, sticky="w")
+
+        self.botaoInserir = tk.Button(self.framePrincipal, text="Inserir", command=self.inserir, bg="#4CAF50", fg="white", padx=10, pady=5)
+        self.botaoInserir.grid(row=1, column=0, pady=10)
+
+-Configurações da interface
+
+        self.botaoPassar = tk.Button(self.framePrincipal, text="Passar", command=self.passar, bg="#4CAF50", fg="white", padx=10, pady=5)
+        self.botaoPassar.grid(row=1, column=1, pady=10)
+
+Cria um botão "Passar" e define a ação self.passar para ser executada quando o botão for clicado.
+
+    def inserir(self):
+        self.catraca.transicao('inserir')
+        self.estadoAtual.config(text=self.catraca.estadoAtual)
+
+    def passar(self):
+        self.catraca.transicao('passar')
+        self.estadoAtual.config(text=self.catraca.estadoAtual)
+
+
+-Criação das definições "inserir" se referindo a inserir o cartão, e "passar" quando o usuário passa pela catraca, ambas as definições atualizam o estado atual do autômato.
+
+if __name__ == "__main__":
+    janela = tk.Tk()
+    app = SimuladorCatraca(janela)
+    janela.mainloop()
+
+- Linhas que iniciam o programa.
