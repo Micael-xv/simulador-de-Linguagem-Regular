@@ -2,6 +2,8 @@ import tkinter as tk
 from tkinter import messagebox, scrolledtext, font
 from graphviz import Digraph
 import os
+import networkx as nx
+import matplotlib.pyplot as plt
 
 class Automato:
     def __init__(self):
@@ -35,33 +37,33 @@ class Automato:
             estados_atuais = proximos_estados
         return bool(estados_atuais & self.estadosDeAceitacao)
 
-    def gerar_grafo(self, cadeia):
-        dot = Digraph()
-        for estado in self.estados:
-            if estado == self.estadoInicial:
-                dot.node(estado, shape='doublecircle', color='green')
-            elif estado in self.estadosDeAceitacao:
-                dot.node(estado, shape='doublecircle', color='red')
+    def generateGraph(self):
+        """Gera o grafo visual do autômato."""
+        G = nx.DiGraph()
+
+        for state, transitions in self.transicoes.items():
+            for symbol, target in transitions.items():
+                for t in target:
+                    G.add_edge(state, t, label=symbol)
+
+        pos = nx.spring_layout(G)
+        plt.figure(figsize=(8, 6))
+
+        node_color = []
+        node_labels = {}
+        for node in G.nodes():
+            if node in self.estadosDeAceitacao:
+                node_color.append('lightgreen')
+                node_labels[node] = f"{node} (&)"
             else:
-                dot.node(estado, shape='circle')
+                node_color.append('skyblue')
+                node_labels[node] = node
 
-        for origem, transicoes in self.transicoes.items():
-            for simbolo, destinos in transicoes.items():
-                for destino in destinos:
-                    dot.edge(origem, destino, label=simbolo)
+        nx.draw(G, pos, with_labels=True, labels=node_labels, node_size=2000, node_color=node_color, font_size=10, font_weight="bold", arrows=True)
+        edge_labels = nx.get_edge_attributes(G, 'label')
+        nx.draw_networkx_edge_labels(G, pos, edge_labels=edge_labels)
 
-        estados_atuais = {self.estadoInicial}
-        for i, simbolo in enumerate(cadeia):
-            proximos_estados = set()
-            for estado in estados_atuais:
-                if estado in self.transicoes and simbolo in self.transicoes[estado]:
-                    proximos_estados.update(self.transicoes[estado][simbolo])
-            estados_atuais = proximos_estados
-            for estado in estados_atuais:
-                dot.node(estado, color='blue')
-
-        dot.render('automato', format='png', cleanup=True)
-        return 'automato.png'
+        return plt
 
 def converter_gramatica_para_automato(regras, simbolo_inicial):
     automato = Automato()
@@ -74,7 +76,7 @@ def converter_gramatica_para_automato(regras, simbolo_inicial):
             producao = producao.strip()
             if producao == "&":
                 automato.adicionar_estado(esquerda, aceitacao=True)
-            elif len(producao) == 1:  # Apenas terminal
+            elif len(producao) == 1:
                 automato.adicionar_estado("final", aceitacao=True)
                 automato.adicionar_transicao(esquerda, producao, "final")
             else:
@@ -82,7 +84,6 @@ def converter_gramatica_para_automato(regras, simbolo_inicial):
                 automato.adicionar_estado(nao_terminal)
                 automato.adicionar_transicao(esquerda, terminal, nao_terminal)
     return automato
-
 
 class SimuladorGramatica:
     def __init__(self, janela):
@@ -176,65 +177,41 @@ class SimuladorGramatica:
             self.cadeiasTeste.config(fg="grey")
 
     def executar_simulacao(self):
-        texto_gramatica = self.entradaGramatica.get("1.0", tk.END).strip()
-        simbolo_inicial = self.simboloInicial.get().strip()
-        cadeias_teste = self.cadeiasTeste.get().strip().split(",")
-
-        if not texto_gramatica or not simbolo_inicial or not cadeias_teste:
-            messagebox.showerror("Erro", "Preencha todos os campos.")
-            return
-
-        regras = texto_gramatica.splitlines()
         try:
+            regras = self.entradaGramatica.get("1.0", tk.END).strip().split("\n")
+            simbolo_inicial = self.simboloInicial.get().strip()
+
             automato = converter_gramatica_para_automato(regras, simbolo_inicial)
+            cadeias = [x.strip() for x in self.cadeiasTeste.get().strip().split(",")]
+
+            resultado = []
+            for cadeia in cadeias:
+                valido = automato.validar_cadeia(cadeia)
+                resultado.append(f"Cadeia '{cadeia}': {'Aceita' if valido else 'Rejeitada'}")
+
+            self.resultadoSaida.config(state="normal")
+            self.resultadoSaida.delete("1.0", tk.END)
+            self.resultadoSaida.insert(tk.END, "\n".join(resultado))
+            self.resultadoSaida.config(state="disabled")
+
+            fig = automato.generateGraph()
+            plt.show()
+
         except Exception as e:
-            messagebox.showerror("Erro", f"Erro ao processar a gramática: {e}")
-            return
-
-        resultados = []
-        for cadeia in cadeias_teste:
-            cadeia = cadeia.strip()
-            if automato.validar_cadeia(cadeia):
-                resultados.append(f"'{cadeia}' -> Aceita")
-            else:
-                resultados.append(f"'{cadeia}' -> Rejeitada")
-
-        self.resultadoSaida.config(state="normal")
-        self.resultadoSaida.delete("1.0", tk.END)
-        self.resultadoSaida.insert(tk.END, "\n".join(resultados))
-        self.resultadoSaida.config(state="disabled")
-
-        # Gerar e exibir o gráfico do autômato em uma nova janela
-        if cadeias_teste:
-            imagem = automato.gerar_grafo(cadeias_teste[0].strip())
-            self.exibir_grafico(imagem)
-
-    def exibir_grafico(self, imagem):
-        nova_janela = tk.Toplevel(self.janela)
-        nova_janela.title("Autômato")
-        nova_janela.geometry("600x600")
-        canvas = tk.Canvas(nova_janela, width=800, height=600, bg="#f5f5f5")
-        canvas.pack()
-        img = tk.PhotoImage(file=imagem)
-        canvas.create_image(0, 0, anchor=tk.NW, image=img)
-        canvas.image = img  # Manter uma referência da imagem para evitar que seja coletada pelo garbage collector
+            messagebox.showerror("Erro", f"Ocorreu um erro: {e}")
 
     def limpar_campos(self):
         self.entradaGramatica.delete("1.0", tk.END)
         self.entradaGramatica.insert(tk.END, "S -> aA | bB\nA -> aS | &\nB -> bS | &")
-        self.entradaGramatica.tag_add("placeholder", "1.0", "end")
-        self.entradaGramatica.config(fg="grey")
         self.simboloInicial.delete(0, tk.END)
         self.simboloInicial.insert(0, "S")
-        self.simboloInicial.config(fg="grey")
         self.cadeiasTeste.delete(0, tk.END)
         self.cadeiasTeste.insert(0, "a, b, aa, ab, aaa, bbb, abab, baab, aabb")
-        self.cadeiasTeste.config(fg="grey")
         self.resultadoSaida.config(state="normal")
         self.resultadoSaida.delete("1.0", tk.END)
         self.resultadoSaida.config(state="disabled")
 
 if __name__ == "__main__":
     janela = tk.Tk()
-    app = SimuladorGramatica(janela)
+    simulador = SimuladorGramatica(janela)
     janela.mainloop()
